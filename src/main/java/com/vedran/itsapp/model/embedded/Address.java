@@ -7,7 +7,7 @@ import javax.validation.constraints.NotEmpty;
 @Data
 public class Address {
   @NotEmpty
-  private String county;
+  private String country;
   @NotEmpty
   private String city;
   @NotEmpty

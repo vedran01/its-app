@@ -12,4 +12,9 @@ public class RestErrorHandler {
     return new ErrorResponse(e.getMessage(), HttpStatus.NOT_FOUND);
   }
 
+  @ExceptionHandler(BadRequestException.class)
+  public ErrorResponse handleBadRequest(BadRequestException e){
+    return new ErrorResponse(e.getMessage(), HttpStatus.BAD_REQUEST);
+  }
+
 }

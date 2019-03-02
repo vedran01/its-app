@@ -7,15 +7,18 @@ import com.vedran.itsapp.model.embedded.Gender;
 import com.vedran.itsapp.model.embedded.Role;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Email;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.Set;
 
 @Data
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @Document(collection = "users")
 public class ItsUser extends AbstractDocument {
@@ -29,7 +32,7 @@ public class ItsUser extends AbstractDocument {
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
   private String picture;
 
-  @NotEmpty
+  @NotNull
   private Gender gender;
 
   @Valid
@@ -41,13 +44,23 @@ public class ItsUser extends AbstractDocument {
   private Address address;
 
   @NotEmpty
+  @Email
   private String email;
-  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
 
   @NotEmpty
-  @Size(min = 6)
+  @Size(min = 6, max = 25)
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
   private String password;
 
   @NotEmpty
   private Set<Role> roles;
+
+  public ItsUser(ItsUser user){
+    setId(user.getId());
+    setEmail(user.getEmail());
+    setPassword(user.getPassword());
+    setRoles(user.getRoles());
+    setFirstName(user.getFirstName());
+    setLastName(user.getLastName());
+  }
 }
