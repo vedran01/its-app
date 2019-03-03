@@ -9,13 +9,12 @@ import com.vedran.itsapp.repository.ItsUserRepository;
 import com.vedran.itsapp.util.error.BadRequestException;
 import com.vedran.itsapp.util.error.ResourceNotFoundException;
 import lombok.Data;
+import lombok.extern.java.Log;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
@@ -24,8 +23,8 @@ import javax.validation.constraints.Size;
 import java.util.OptionalInt;
 import java.util.Set;
 import java.util.function.BiPredicate;
-import java.util.function.Predicate;
 
+@Log
 @Service
 public class ItsUserService {
 
@@ -44,7 +43,6 @@ public class ItsUserService {
     return repository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException(ItsUser.class,"id",id));
   }
-
 
   public ItsUser save(ItsUser user){
     user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -75,27 +73,45 @@ public class ItsUserService {
   public String updateRoles(String id, Set<Role> roles, ItsUser principal){
     ItsUser subject = findOne(id);
 
-    OptionalInt changerLevel = principal.getRoles().stream().mapToInt(Role::ordinal).max();
-    OptionalInt subjectLevel = subject.getRoles().stream().mapToInt(Role::ordinal).max();
-    OptionalInt rolesLevel = roles.stream().mapToInt(Role::ordinal).max();
+    OptionalInt changerLevel = findRoleMaxLevel(principal.getRoles());
+    OptionalInt subjectLevel = findRoleMaxLevel(subject.getRoles());
+    OptionalInt rolesLevel = findRoleMaxLevel(roles);
 
-    BiPredicate<Integer ,Integer> canChange = (s,c) -> !s.equals(c) && s < c;
-    BiPredicate<Integer, Integer> isRoleLess = (r,c) -> r < c;
+    if(!rolesLevel.isPresent()){
+      throw new BadRequestException("No roles supplied, please add at least one role.");
+    }
 
-    if(!canChange.test(subjectLevel.getAsInt(),changerLevel.getAsInt())){
+    if(subject.getId().equals(principal.getId())){
+      if(testRole(Integer::equals,changerLevel.getAsInt(),rolesLevel.getAsInt())){
+        subject.setRoles(roles);
+        repository.save(subject);
+        return "Successfully updated your roles.";
+      }
+      else {
+        throw new BadRequestException("You can not downgrade your role.");
+      }
+    }
+
+    if(!testRole((s,c) -> !s.equals(c) && s < c,subjectLevel.getAsInt(),changerLevel.getAsInt())){
       throw new BadRequestException("You don't have permission to change this subject role.");
     }
 
-    if(!isRoleLess.test(rolesLevel.getAsInt(),changerLevel.getAsInt())){
+    if(!testRole((r,c) -> r < c,rolesLevel.getAsInt(),changerLevel.getAsInt())){
       throw new BadRequestException("You can not assign role grater than yours.");
     }
 
     subject.setRoles(roles);
     repository.save(subject);
-    return "User role updated";
+    return "Subject role updated.";
   }
 
+  private boolean testRole(BiPredicate<Integer ,Integer> predicate, int r1, int r2){
+    return predicate.test(r1,r2);
+  }
 
+  private OptionalInt findRoleMaxLevel(Set<Role> roles){
+    return roles.stream().mapToInt(Role::ordinal).max();
+  }
 
   private boolean isValidPasswordRequest(UpdatePasswordRequest request, String oldPassword){
     BiPredicate<String,String> oldPasswordMatch = passwordEncoder::matches;
@@ -103,10 +119,6 @@ public class ItsUserService {
     return confirmPasswordMatch.test(request.getNewPassword(), request.getConfirmPassword())
             && oldPasswordMatch.test(request.getOldPassword(),oldPassword);
   }
-
-
-
-
 
   @Data
   public static class UpdatePasswordRequest{

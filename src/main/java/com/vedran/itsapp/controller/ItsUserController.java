@@ -12,7 +12,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.net.URI;
 import java.security.Principal;
 import java.util.Set;
@@ -63,7 +65,7 @@ public class ItsUserController {
   }
 
   @PatchMapping("/{id}")
-  String updateRole(@PathVariable String id, @NotNull @RequestBody Set<Role> role, @AuthenticationPrincipal ItsUser user){
+  String updateRole(@PathVariable String id, @RequestBody @NotNull Set<Role> role, @AuthenticationPrincipal ItsUser user){
     return service.updateRoles(id,role,user);
   }
 
