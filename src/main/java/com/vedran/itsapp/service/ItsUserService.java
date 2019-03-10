@@ -8,19 +8,23 @@ import com.vedran.itsapp.model.embedded.Role;
 import com.vedran.itsapp.repository.ItsUserRepository;
 import com.vedran.itsapp.util.error.BadRequestException;
 import com.vedran.itsapp.util.error.ResourceNotFoundException;
+import com.vedran.itsapp.util.storage.ImageStore;
 import lombok.Data;
 import lombok.extern.java.Log;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import java.util.OptionalInt;
+import java.util.Date;
 import java.util.Set;
 import java.util.function.BiPredicate;
 
@@ -30,6 +34,12 @@ public class ItsUserService {
 
   private final ItsUserRepository repository;
   private final PasswordEncoder passwordEncoder;
+
+  @Bean
+  ImageStore imageStore(){
+    return new ImageStore("/pictures");
+  }
+
   public ItsUserService(ItsUserRepository repository, PasswordEncoder passwordEncoder) {
     this.repository = repository;
     this.passwordEncoder = passwordEncoder;
@@ -44,7 +54,18 @@ public class ItsUserService {
             .orElseThrow(() -> new ResourceNotFoundException(ItsUser.class,"id",id));
   }
 
-  public ItsUser save(ItsUser user){
+  @PreAuthorize("hasAnyRole('ROLE_HEAD_ADMINISTRATOR', 'ROLE_USER_ADMINISTRATOR')")
+  public ItsUser save(ItsUser user, ItsUser principal){
+    int principalMaxLevel = findRoleMaxLevel(principal.getRoles());
+    int userMaxLevel = findRoleMaxLevel(user.getRoles());
+
+    if(testRole((r1,r2) -> r1 >= r2, userMaxLevel, principalMaxLevel)){
+      throw new BadRequestException(
+              String.format("You can not save user with authority grater or equals to yours. " +
+                      "Your authority %s, subject authority %s", Role.values()[principalMaxLevel],
+                      Role.values()[userMaxLevel] ));
+    }
+
     user.setPassword(passwordEncoder.encode(user.getPassword()));
     return repository.save(user);
   }
@@ -56,6 +77,7 @@ public class ItsUserService {
     user.setContact(request.getContact());
     user.setAddress(request.getAddress());
     user.setGender(request.getGender());
+    user.setBirthDate(request.getBirthDate());
     return repository.save(user);
   }
 
@@ -73,31 +95,28 @@ public class ItsUserService {
   public String updateRoles(String id, Set<Role> roles, ItsUser principal){
     ItsUser subject = findOne(id);
 
-    OptionalInt changerLevel = findRoleMaxLevel(principal.getRoles());
-    OptionalInt subjectLevel = findRoleMaxLevel(subject.getRoles());
-    OptionalInt rolesLevel = findRoleMaxLevel(roles);
+    int principalMaxLevel = findRoleMaxLevel(principal.getRoles());
+    int subjectMaxLevel = findRoleMaxLevel(subject.getRoles());
+    int suppliedRolesLevel = findRoleMaxLevel(roles);
 
-    if(!rolesLevel.isPresent()){
-      throw new BadRequestException("No roles supplied, please add at least one role.");
-    }
 
     if(subject.getId().equals(principal.getId())){
-      if(testRole(Integer::equals,changerLevel.getAsInt(),rolesLevel.getAsInt())){
+      if(testRole(Integer::equals,principalMaxLevel,suppliedRolesLevel)){
         subject.setRoles(roles);
         repository.save(subject);
         return "Successfully updated your roles.";
       }
       else {
-        throw new BadRequestException("You can not downgrade your role.");
+        throw new BadRequestException("You can not downgrade your's Authority.");
       }
     }
 
-    if(!testRole((s,c) -> !s.equals(c) && s < c,subjectLevel.getAsInt(),changerLevel.getAsInt())){
+    if(testRole((s,c) -> s <= c, principalMaxLevel, subjectMaxLevel)){
       throw new BadRequestException("You don't have permission to change this subject role.");
     }
 
-    if(!testRole((r,c) -> r < c,rolesLevel.getAsInt(),changerLevel.getAsInt())){
-      throw new BadRequestException("You can not assign role grater than yours.");
+    if(testRole((r,c) -> r <= c,principalMaxLevel, suppliedRolesLevel)){
+      throw new BadRequestException("You can not assign role grater than or equals yours.");
     }
 
     subject.setRoles(roles);
@@ -109,8 +128,11 @@ public class ItsUserService {
     return predicate.test(r1,r2);
   }
 
-  private OptionalInt findRoleMaxLevel(Set<Role> roles){
-    return roles.stream().mapToInt(Role::ordinal).max();
+  private int findRoleMaxLevel(Set<Role> roles){
+    if(roles.isEmpty()){
+      throw new BadRequestException("Roles not present");
+    }
+    return roles.stream().mapToInt(Role::ordinal).max().getAsInt();
   }
 
   private boolean isValidPasswordRequest(UpdatePasswordRequest request, String oldPassword){
@@ -118,6 +140,15 @@ public class ItsUserService {
     BiPredicate<String, String> confirmPasswordMatch = String::equals;
     return confirmPasswordMatch.test(request.getNewPassword(), request.getConfirmPassword())
             && oldPasswordMatch.test(request.getOldPassword(),oldPassword);
+  }
+
+  public String updatePicture(String id, MultipartFile picture) {
+    ItsUser user = findOne(id);
+    imageStore().deleteImage("users/images/" + user.getPicture());
+    String newPicture = imageStore().storeImage(picture,"users/images/",id);
+    user.setPicture(newPicture);
+    repository.save(user);
+    return "Image successfully updated.";
   }
 
   @Data
@@ -147,6 +178,8 @@ public class ItsUserService {
     private Address address;
     @NotNull
     private Gender gender;
+    @NotNull
+    private Date birthDate;
   }
 }
 

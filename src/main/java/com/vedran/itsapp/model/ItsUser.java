@@ -15,6 +15,7 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.util.Date;
 import java.util.Set;
 
 @Data
@@ -34,6 +35,8 @@ public class ItsUser extends AbstractDocument {
 
   @NotNull
   private Gender gender;
+
+  private Date birthDate;
 
   @Valid
   @NotNull

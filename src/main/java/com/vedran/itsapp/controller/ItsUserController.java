@@ -6,9 +6,12 @@ import com.vedran.itsapp.service.ItsUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.validation.Valid;
@@ -48,8 +51,8 @@ public class ItsUserController {
   }
 
   @PostMapping
-  ResponseEntity<ItsUser> save(@Valid @RequestBody ItsUser user){
-    ItsUser savedUser = service.save(user);
+  ResponseEntity<ItsUser> save(@Valid @RequestBody ItsUser user, @AuthenticationPrincipal ItsUser principal){
+    ItsUser savedUser = service.save(user,principal);
     URI uri = ServletUriComponentsBuilder.fromCurrentRequest().buildAndExpand(savedUser.getId()).toUri();
     return ResponseEntity.created(uri).body(savedUser);
   }
@@ -59,14 +62,22 @@ public class ItsUserController {
     return service.update(id,request);
   }
 
-  @PutMapping("/password")
-  String updatePassword(@Valid @RequestBody UpdatePasswordRequest request){
-    return service.updatePassword(request);
+  @PutMapping(value = "/password", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+  ResponseEntity<String> updatePassword(@Valid @RequestBody UpdatePasswordRequest request){
+    String message = service.updatePassword(request);
+    return ResponseEntity.ok(String.format("{\"message\":\"%s\"}", message));
   }
 
-  @PatchMapping("/{id}")
-  String updateRole(@PathVariable String id, @RequestBody @NotNull Set<Role> role, @AuthenticationPrincipal ItsUser user){
-    return service.updateRoles(id,role,user);
+  @PutMapping(value = "/{id}/role", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+  ResponseEntity<String> updateRole(@PathVariable String id, @RequestBody @NotNull Set<Role> roles, @AuthenticationPrincipal ItsUser user){
+    String message = service.updateRoles(id,roles,user);
+    return ResponseEntity.ok(String.format("{\"message\":\"%s\"}", message));
   }
 
+  @PostMapping(value = "/{id}/picture", consumes = MediaType.MULTIPART_FORM_DATA_VALUE ,
+                                        produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+  ResponseEntity<String> updateUserPicture(@PathVariable String id, MultipartFile picture){
+    String message = service.updatePicture(id,picture);
+    return ResponseEntity.ok(String.format("{\"message\":\"%s\"}", message));
+  }
 }
