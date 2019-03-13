@@ -11,7 +11,6 @@ import com.vedran.itsapp.util.error.ResourceNotFoundException;
 import com.vedran.itsapp.util.storage.ImageStore;
 import lombok.Data;
 import lombok.extern.java.Log;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,6 +24,7 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 import java.util.function.BiPredicate;
 
@@ -52,6 +52,15 @@ public class ItsUserService {
   public ItsUser findOne(String id){
     return repository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException(ItsUser.class,"id",id));
+  }
+
+  public ItsUser findOneByEmail(String email){
+    return repository.findByEmail(email)
+            .orElse(null);
+  }
+
+  public Page<ItsUser> findByFirstNameOrLastName(String firstName, String lastName, Pageable pageable) {
+    return repository.searchByFirstOrLastName(firstName,lastName, pageable);
   }
 
   @PreAuthorize("hasAnyRole('ROLE_HEAD_ADMINISTRATOR', 'ROLE_USER_ADMINISTRATOR')")

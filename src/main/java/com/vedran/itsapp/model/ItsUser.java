@@ -8,6 +8,7 @@ import com.vedran.itsapp.model.embedded.Role;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.validation.Valid;
@@ -48,6 +49,7 @@ public class ItsUser extends AbstractDocument {
 
   @NotEmpty
   @Email
+  @Indexed(unique = true)
   private String email;
 
   @NotEmpty

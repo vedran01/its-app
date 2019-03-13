@@ -20,6 +20,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.net.URI;
 import java.security.Principal;
+import java.util.List;
 import java.util.Set;
 
 import static com.vedran.itsapp.service.ItsUserService.UpdatePasswordRequest;
@@ -43,6 +44,19 @@ public class ItsUserController {
   @GetMapping("/{id}")
   ItsUser findOne(@PathVariable String id){
     return service.findOne(id);
+  }
+
+  @GetMapping("/email/{email}")
+  ItsUser findOneByEmail(@PathVariable String email){
+    return service.findOneByEmail(email);
+  }
+
+  @GetMapping("/search")
+  Page<ItsUser> searchByFirstNameOrLastName(@RequestParam String firstName,
+                                            @RequestParam(required = false, defaultValue = "") String lastName,
+                                            @RequestParam(required = false, defaultValue = "0") int page,
+                                            @RequestParam(required = false, defaultValue = "10") int size){
+    return service.findByFirstNameOrLastName(firstName,lastName,PageRequest.of(page,size));
   }
 
   @GetMapping("/principal")

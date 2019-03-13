@@ -10,6 +10,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -17,7 +18,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
   @Autowired
-  ItsUserDetailsService service;
+  private ItsUserDetailsService userDetailsService;
+  @Autowired
+  private ItsJwtHelper jwtHelper;
 
   @Bean
   public PasswordEncoder passwordEncoder(){
@@ -26,12 +29,13 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
   @Override
   protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-    auth.userDetailsService(service);
+    auth.userDetailsService(userDetailsService);
   }
 
   @Override
   protected void configure(HttpSecurity http) throws Exception {
     http.csrf().disable();
-    http.addFilter(new ItsAuthenticationFilter(authenticationManager()));
+    http.addFilter(new ItsAuthenticationFilter(authenticationManager(),jwtHelper))
+        .addFilterAt(new ItsAuthorizationFilter(jwtHelper, userDetailsService), BasicAuthenticationFilter.class);
   }
 }

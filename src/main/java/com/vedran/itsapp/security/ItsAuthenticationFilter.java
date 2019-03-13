@@ -1,5 +1,6 @@
 package com.vedran.itsapp.security;
 
+import com.vedran.itsapp.model.ItsUser;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -15,11 +16,12 @@ import java.io.IOException;
 import java.util.UUID;
 
 public class ItsAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
-
+  private final ItsJwtHelper jwt;
   private AuthenticationManager authenticationManager;
 
-  ItsAuthenticationFilter(AuthenticationManager authenticationManager) {
+  ItsAuthenticationFilter(AuthenticationManager authenticationManager, ItsJwtHelper jwt) {
     this.authenticationManager = authenticationManager;
+    this.jwt = jwt;
   }
 
   @Override
@@ -31,8 +33,7 @@ public class ItsAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 
   @Override
   protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authResult) throws IOException, ServletException {
-    //TODO GENERATE TOKEN HERE
-    String token = UUID.randomUUID().toString();
+    String token = jwt.generateTokenJwt((ItsUser) authResult.getPrincipal());
     response.setContentType(MediaType.APPLICATION_JSON_UTF8_VALUE);
     response.getWriter().write(String.format("{\"auth-token\": \"%s\"}", token));
   }
