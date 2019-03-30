@@ -3,6 +3,7 @@ package com.vedran.itsapp.security;
 import com.vedran.itsapp.model.ItsUser;
 import lombok.extern.java.Log;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -18,14 +19,18 @@ import static com.vedran.itsapp.model.embedded.Role.ROLE_HEAD_ADMINISTRATOR;
 
 @Log
 @Component
-public class AdminInitilizer implements ApplicationRunner {
+public class AdminInitializer implements ApplicationRunner {
 
+  @Value("${its.admin-initializer.email}")
+  private String adminMail;
+  @Value("${its.admin-initializer.password}")
+  private String adminPassword;
   @Autowired
   private MongoTemplate template;
   @Autowired
   private PasswordEncoder passwordEncoder;
-  @Override
 
+  @Override
   public void run(ApplicationArguments args) throws Exception {
     ItsUser user = template.findOne(Query.query(Criteria.where("roles")
             .in(ROLE_HEAD_ADMINISTRATOR.toString()).exists(true)), ItsUser.class);
@@ -33,15 +38,13 @@ public class AdminInitilizer implements ApplicationRunner {
     if(user == null){
       log.info(ROLE_HEAD_ADMINISTRATOR.toString() + " not present.");
       ItsUser admin = new ItsUser();
-      String email = "admin@admin.com";
-      admin.setEmail(email);
-      String password = "password";
-      admin.setPassword(passwordEncoder.encode(password));
+      admin.setEmail(adminMail);
+      String password = passwordEncoder.encode(adminPassword);
+      admin.setPassword(password);
       admin.setRoles(new HashSet<>(Collections.singletonList(ROLE_HEAD_ADMINISTRATOR)));
       admin.setPicture("default-profile.picture.png");
       template.save(admin);
-      log.info(String.format("Created admin with username %s and password %s",email,password));
+      log.info(String.format("Created admin with username %s and password %s",adminMail,adminPassword));
     }
-
   }
 }

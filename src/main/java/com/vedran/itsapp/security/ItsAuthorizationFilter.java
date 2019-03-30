@@ -6,6 +6,7 @@ import lombok.extern.java.Log;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.servlet.FilterChain;
@@ -37,7 +38,7 @@ public class ItsAuthorizationFilter extends OncePerRequestFilter {
 
       SecurityContextHolder.getContext().setAuthentication(authenticationToken);
     }
-    catch (IllegalArgumentException |JwtException e){
+    catch (UsernameNotFoundException | IllegalArgumentException |JwtException e){
       log.log(Level.WARNING, e.getMessage());
     }
 

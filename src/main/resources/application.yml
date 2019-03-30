@@ -1,6 +1,27 @@
 spring:
+
   data:
     mongodb:
-      uri: "mongodb://192.168.0.16:27017//itsdb"
+      uri: "mongodb://192.168.0.16:27017/itsdb"
+
   resources:
     static-locations: "file:../its-app/pictures/users/images,classpath:/static/"
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: "username"
+    password: "password"
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+its:
+  admin-initializer:
+    email: "admin@mail.com"
+    password: "password"
+
+
