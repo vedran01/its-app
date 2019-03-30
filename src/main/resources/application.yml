@@ -1,6 +1,6 @@
 spring:
   data:
     mongodb:
-      uri: "mongodb://localhost/itsdb"
+      uri: "mongodb://192.168.0.16:27017//itsdb"
   resources:
     static-locations: "file:../its-app/pictures/users/images,classpath:/static/"

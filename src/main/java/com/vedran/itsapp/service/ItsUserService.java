@@ -11,14 +11,19 @@ import com.vedran.itsapp.util.error.ResourceNotFoundException;
 import com.vedran.itsapp.util.storage.ImageStore;
 import lombok.Data;
 import lombok.extern.java.Log;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.mail.MailSendException;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.mail.SendFailedException;
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
@@ -26,6 +31,7 @@ import javax.validation.constraints.Size;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.BiPredicate;
 
 @Log
@@ -34,6 +40,8 @@ public class ItsUserService {
 
   private final ItsUserRepository repository;
   private final PasswordEncoder passwordEncoder;
+  @Autowired
+  private JavaMailSender sender;
 
   @Bean
   ImageStore imageStore(){
@@ -74,8 +82,18 @@ public class ItsUserService {
                       "Your authority %s, subject authority %s", Role.values()[principalMaxLevel],
                       Role.values()[userMaxLevel] ));
     }
+    String password = UUID.randomUUID().toString();
+    SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
+    simpleMailMessage.setTo(user.getEmail());
+    simpleMailMessage.setSubject("Its registration");
+    simpleMailMessage.setText(password);
+    try {
+      sender.send(simpleMailMessage);
+    }catch (MailSendException e){
+      log.info(e.getMessage());
+    }
 
-    user.setPassword(passwordEncoder.encode(user.getPassword()));
+    user.setPassword(passwordEncoder.encode(password));
     return repository.save(user);
   }
 

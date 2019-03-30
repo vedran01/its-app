@@ -1,5 +1,6 @@
 package com.vedran.itsapp.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.vedran.itsapp.model.embedded.Address;
 import com.vedran.itsapp.model.embedded.Contact;
@@ -52,9 +53,10 @@ public class ItsUser extends AbstractDocument {
   @Indexed(unique = true)
   private String email;
 
-  @NotEmpty
+  /*@NotEmpty
   @Size(min = 6, max = 25)
-  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)*/
+  @JsonIgnore
   private String password;
 
   @NotEmpty
