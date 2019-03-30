@@ -1,13 +1,16 @@
 package com.vedran.itsapp.model;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
 
 import java.util.Date;
 
-@Data
+@Getter
+@Setter
 public abstract class AbstractDocument {
   @Id
   private String id;
@@ -15,4 +18,4 @@ public abstract class AbstractDocument {
   private Date created;
   @LastModifiedDate
   private Date modified;
-}
+
