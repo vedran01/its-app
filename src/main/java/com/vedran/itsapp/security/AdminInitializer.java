@@ -38,11 +38,13 @@ public class AdminInitializer implements ApplicationRunner {
     if(user == null){
       log.info(ROLE_HEAD_ADMINISTRATOR.toString() + " not present.");
       ItsUser admin = new ItsUser();
+      admin.setFirstName("Admin");
+      admin.setLastName("Admin");
       admin.setEmail(adminMail);
       String password = passwordEncoder.encode(adminPassword);
       admin.setPassword(password);
       admin.setRoles(new HashSet<>(Collections.singletonList(ROLE_HEAD_ADMINISTRATOR)));
-      admin.setPicture("default-profile.picture.png");
+      admin.setPicture("profile-picture.png");
       template.save(admin);
       log.info(String.format("Created admin with username %s and password %s",adminMail,adminPassword));
     }

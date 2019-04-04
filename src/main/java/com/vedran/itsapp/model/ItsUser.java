@@ -53,9 +53,9 @@ public class ItsUser extends AbstractDocument {
   @Indexed(unique = true)
   private String email;
 
-  /*@NotEmpty
+  @NotEmpty
   @Size(min = 6, max = 25)
-  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)*/
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
   @JsonIgnore
   private String password;
 
