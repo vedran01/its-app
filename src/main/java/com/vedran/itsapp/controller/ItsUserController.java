@@ -2,6 +2,7 @@ package com.vedran.itsapp.controller;
 
 import com.vedran.itsapp.model.ItsUser;
 import com.vedran.itsapp.model.embedded.Role;
+import com.vedran.itsapp.security.ItsUserDetails;
 import com.vedran.itsapp.service.ItsUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -51,8 +52,13 @@ public class ItsUserController {
     return service.findOneByEmail(email);
   }
 
+  @GetMapping("/email/{email}/exists")
+  boolean existsByEmail(@PathVariable String email){
+    return service.existsByEmail(email);
+  }
+
   @GetMapping("/search")
-  Page<ItsUser> searchByFirstNameOrLastName(@RequestParam String firstName,
+  Page<ItsUser> searchByFirstNameOrLastName(@RequestParam(required = false, defaultValue = "") String firstName,
                                             @RequestParam(required = false, defaultValue = "") String lastName,
                                             @RequestParam(required = false, defaultValue = "0") int page,
                                             @RequestParam(required = false, defaultValue = "10") int size){
@@ -60,7 +66,7 @@ public class ItsUserController {
   }
 
   @GetMapping("/principal")
-  Principal itsUser(@AuthenticationPrincipal Principal user){
+  ItsUser itsUser(@AuthenticationPrincipal ItsUserDetails user){
     return user;
   }
 
