@@ -56,7 +56,6 @@ public class ItsUser extends AbstractDocument {
   @NotEmpty
   @Size(min = 6, max = 25)
   @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-  @JsonIgnore
   private String password;
 
   @NotEmpty
@@ -69,5 +68,6 @@ public class ItsUser extends AbstractDocument {
     setRoles(user.getRoles());
     setFirstName(user.getFirstName());
     setLastName(user.getLastName());
+    setPicture(user.getPicture());
   }
 }
