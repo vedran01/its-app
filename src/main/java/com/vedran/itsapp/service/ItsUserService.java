@@ -157,13 +157,12 @@ public class ItsUserService {
             && oldPasswordMatch.test(request.getOldPassword(),oldPassword);
   }
 
-  public String updatePicture(String id, MultipartFile picture) {
+  public ItsUser updatePicture(String id, MultipartFile picture) {
     ItsUser user = findOne(id);
     imageStore().deleteImage("users/images/" + user.getPicture());
     String newPicture = imageStore().storeImage(picture,"users/images/",id);
     user.setPicture(newPicture);
-    repository.save(user);
-    return "Image successfully updated.";
+    return repository.save(user);
   }
 
   public boolean isOwner(String id, Authentication authentication){

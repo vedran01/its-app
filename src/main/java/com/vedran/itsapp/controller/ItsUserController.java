@@ -96,8 +96,7 @@ public class ItsUserController {
 
   @PostMapping(value = "/{id}/picture", consumes = MediaType.MULTIPART_FORM_DATA_VALUE ,
                                         produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-  ResponseEntity<String> updateUserPicture(@PathVariable String id, MultipartFile picture){
-    String message = service.updatePicture(id,picture);
-    return ResponseEntity.ok(String.format("{\"message\":\"%s\"}", message));
+  ItsUser updateUserPicture(@PathVariable String id, MultipartFile picture){
+    return service.updatePicture(id,picture);
   }
 }
