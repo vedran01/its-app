@@ -18,4 +18,5 @@ public abstract class AbstractDocument {
   private Date created;
   @LastModifiedDate
   private Date modified;
+}
 
