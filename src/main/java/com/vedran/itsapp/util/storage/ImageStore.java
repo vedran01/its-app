@@ -1,6 +1,8 @@
 package com.vedran.itsapp.util.storage;
 
 import lombok.extern.java.Log;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.PostConstruct;
@@ -10,14 +12,16 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 @Log
+@Component
 public class ImageStore implements FileStore {
 
   private Path basePath;
+  //private String path;
 
-  public ImageStore(String basePath){
+  public ImageStore(@Value("${its.file-store.basePath:uploads}") String path){
 
     this.basePath = Paths.get("").toAbsolutePath()
-            .resolve(basePath.replaceFirst("/",""));
+            .resolve(path);
   }
 
   public String storeImage(MultipartFile file, String path, String id){
@@ -57,6 +61,7 @@ public class ImageStore implements FileStore {
 
   private String resolvePictureName(String name ,MultipartFile file){
     String originalFilename = file.getOriginalFilename();
+
     if(originalFilename  != null){
 
       if(originalFilename.endsWith("jpg")){

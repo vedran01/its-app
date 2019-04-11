@@ -11,6 +11,7 @@ import com.vedran.itsapp.util.error.ResourceNotFoundException;
 import com.vedran.itsapp.util.storage.ImageStore;
 import lombok.Data;
 import lombok.extern.java.Log;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -35,10 +36,8 @@ public class ItsUserService {
   private final ItsUserRepository repository;
   private final PasswordEncoder passwordEncoder;
 
-  @Bean
-  ImageStore imageStore(){
-    return new ImageStore("/pictures");
-  }
+  @Autowired
+  ImageStore imageStore;
 
   public ItsUserService(ItsUserRepository repository, PasswordEncoder passwordEncoder) {
     this.repository = repository;
@@ -159,8 +158,8 @@ public class ItsUserService {
 
   public ItsUser updatePicture(String id, MultipartFile picture) {
     ItsUser user = findOne(id);
-    imageStore().deleteImage("users/images/" + user.getPicture());
-    String newPicture = imageStore().storeImage(picture,"users/images/",id);
+    imageStore.deleteImage("users/" + user.getPicture());
+    String newPicture = imageStore.storeImage(picture,"users/",id);
     user.setPicture(newPicture);
     return repository.save(user);
   }

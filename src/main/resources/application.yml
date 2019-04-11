@@ -3,11 +3,14 @@ spring:
     mongodb:
       uri: "mongodb://192.168.0.16:27017/itsdb"
   resources:
-    static-locations: "file:../its-app/pictures/users/images,classpath:/static/"
+    static-locations: "file:./uploads,classpath:/static/"
 
 its:
   admin-initializer:
     email: "admin@mail.com"
     password: "password"
+
+  file-store:
+    basePath: "uploads"
 
 
