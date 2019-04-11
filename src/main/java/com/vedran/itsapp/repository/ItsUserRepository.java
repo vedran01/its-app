@@ -10,11 +10,12 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ItsUserRepository extends MongoRepository<ItsUser, String> {
-  Optional<ItsUser> findByEmail(String email);
 
   boolean existsByEmail(String email);
 
-  @Query("{'firstName' : { $regex: ?0, $options: 'i'} , 'lastName': { $regex: ?1, $options: 'i'} }")
+  Optional<ItsUser> findByEmail(String email);
+
+  @Query("{ $or: [ {'firstName' : { $regex: ?0, $options: 'i'}} , {'lastName': { $regex: ?1, $options: 'i'}}]}")
   Page<ItsUser> searchByFirstOrLastName(String firstName, String lastName, Pageable pageable);
 
 }

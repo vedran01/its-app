@@ -7,10 +7,9 @@ import javax.validation.constraints.NotEmpty;
 
 @Data
 public class Contact {
-  @NotEmpty
+  @Email
   private String contactEmail;
   @NotEmpty
   private String cell;
-  @NotEmpty
   private String phone;
 }

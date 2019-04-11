@@ -35,7 +35,6 @@ public class ItsUserController {
   @Autowired
   private ItsUserService service;
 
-
   @GetMapping
   Page<ItsUser> findAll(@RequestParam(required = false, defaultValue = "0") int page,
                         @RequestParam(required = false, defaultValue = "10") int size){

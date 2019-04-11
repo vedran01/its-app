@@ -14,10 +14,8 @@ import java.util.Date;
 public abstract class AbstractDocument {
   @Id
   private String id;
-
   @CreatedDate
   private Date created;
-
   @LastModifiedDate
   private Date modified;
 }
