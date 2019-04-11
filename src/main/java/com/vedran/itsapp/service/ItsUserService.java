@@ -37,7 +37,7 @@ public class ItsUserService {
   private final PasswordEncoder passwordEncoder;
 
   @Autowired
-  ImageStore imageStore;
+  private ImageStore imageStore;
 
   public ItsUserService(ItsUserRepository repository, PasswordEncoder passwordEncoder) {
     this.repository = repository;
