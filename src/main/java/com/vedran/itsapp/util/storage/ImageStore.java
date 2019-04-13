@@ -16,10 +16,8 @@ import java.nio.file.Paths;
 public class ImageStore implements FileStore {
 
   private Path basePath;
-  //private String path;
 
   public ImageStore(@Value("${its.file-store.basePath:uploads}") String path){
-
     this.basePath = Paths.get("").toAbsolutePath()
             .resolve(path);
   }

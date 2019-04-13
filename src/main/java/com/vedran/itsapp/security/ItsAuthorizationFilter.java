@@ -18,8 +18,10 @@ import java.util.logging.Level;
 
 @Log
 public class ItsAuthorizationFilter extends OncePerRequestFilter {
+
   private final ItsJwtHelper jwtHelper;
   private final ItsUserDetailsService service;
+
   ItsAuthorizationFilter(ItsJwtHelper jwtHelper, ItsUserDetailsService service){
     this.jwtHelper = jwtHelper;
     this.service = service;
@@ -29,6 +31,7 @@ public class ItsAuthorizationFilter extends OncePerRequestFilter {
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
     final String HEADER = "Authorization";
     String token = request.getHeader(HEADER);
+
     try {
 
       Claims claims = jwtHelper.getClaimsFromToken(token);

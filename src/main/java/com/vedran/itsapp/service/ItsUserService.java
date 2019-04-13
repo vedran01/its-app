@@ -6,13 +6,13 @@ import com.vedran.itsapp.model.embedded.Contact;
 import com.vedran.itsapp.model.embedded.Gender;
 import com.vedran.itsapp.model.embedded.Role;
 import com.vedran.itsapp.repository.ItsUserRepository;
-import com.vedran.itsapp.util.error.BadRequestException;
-import com.vedran.itsapp.util.error.ResourceNotFoundException;
+import com.vedran.itsapp.security.ItsUserDetails;
+import com.vedran.itsapp.util.error.exceptions.BadRequestException;
+import com.vedran.itsapp.util.error.exceptions.ResourceNotFoundException;
 import com.vedran.itsapp.util.storage.ImageStore;
 import lombok.Data;
 import lombok.extern.java.Log;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -43,7 +43,7 @@ public class ItsUserService {
     this.repository = repository;
     this.passwordEncoder = passwordEncoder;
   }
-  //@PreAuthorize("hasRole('ROLE_HEAD_ADMINISTRATOR')")
+
   public Page<ItsUser> findAll(Pageable pageable){
     return repository.findAll(pageable);
   }
@@ -83,7 +83,8 @@ public class ItsUserService {
     return repository.save(user);
   }
 
-  @PreAuthorize("@itsUserService.isOwner(#id, authentication)")
+  @PreAuthorize("@itsUserService.isOwner(#id, authentication) or\n" +
+          "hasAnyRole('ROLE_HEAD_ADMINISTRATOR', 'ROLE_USER_ADMINISTRATOR')")
   public ItsUser update(String id, UpdateUserRequest request){
     ItsUser user = findOne(id);
     user.setFirstName(request.getFirstName());
@@ -95,6 +96,7 @@ public class ItsUserService {
     return repository.save(user);
   }
 
+  @PreAuthorize("@itsUserService.isOwner(#request.userId, authentication)")
   public String updatePassword(UpdatePasswordRequest request){
     ItsUser user = findOne(request.getUserId());
     if(isValidPasswordRequest(request, user.getPassword())){
@@ -105,7 +107,7 @@ public class ItsUserService {
     throw new BadRequestException("Invalid update password request.");
   }
 
-  @PreAuthorize("hasRole('ROLE_HEAD_ADMINISTRATOR') or hasRole('ROLE_USER_ADMINISTRATOR')")
+  @PreAuthorize("hasAnyRole('ROLE_HEAD_ADMINISTRATOR', 'ROLE_USER_ADMINISTRATOR')")
   public String updateRoles(String id, Set<Role> roles, ItsUser principal){
     ItsUser subject = findOne(id);
 
@@ -121,7 +123,7 @@ public class ItsUserService {
         return "Successfully updated your roles.";
       }
       else {
-        throw new BadRequestException("You can not downgrade your's Authority.");
+        throw new BadRequestException("You can not downgrade your Authority.");
       }
     }
 
@@ -156,6 +158,8 @@ public class ItsUserService {
             && oldPasswordMatch.test(request.getOldPassword(),oldPassword);
   }
 
+  @PreAuthorize("@itsUserService.isOwner(#id, authentication) or\n" +
+          "hasAnyRole('ROLE_HEAD_ADMINISTRATOR', 'ROLE_USER_ADMINISTRATOR')")
   public ItsUser updatePicture(String id, MultipartFile picture) {
     ItsUser user = findOne(id);
     imageStore.deleteImage("users/" + user.getPicture());
@@ -165,8 +169,11 @@ public class ItsUserService {
   }
 
   public boolean isOwner(String id, Authentication authentication){
-    String principalId = ((ItsUser) authentication.getPrincipal()).getId();
-    return id.equals(principalId);
+    if(authentication.getPrincipal() instanceof ItsUserDetails) {
+      String principalId = ((ItsUser) authentication.getPrincipal()).getId();
+      return id.equals(principalId);
+    }
+    else return false;
   }
 
   @Data

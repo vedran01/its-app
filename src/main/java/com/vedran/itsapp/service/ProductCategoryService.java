@@ -2,8 +2,8 @@ package com.vedran.itsapp.service;
 
 import com.vedran.itsapp.model.ProductCategory;
 import com.vedran.itsapp.repository.ProductCategoryRepository;
-import com.vedran.itsapp.util.error.BadRequestException;
-import com.vedran.itsapp.util.error.ResourceNotFoundException;
+import com.vedran.itsapp.util.error.exceptions.BadRequestException;
+import com.vedran.itsapp.util.error.exceptions.ResourceNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -31,10 +31,10 @@ public class ProductCategoryService {
     if(productCategory.getLevel() == 1)
       return repository.save(productCategory);
 
-    ProductCategory parent = productCategory.getParent();
+    String parentId = productCategory.get_parentId();
 
-    if(parent != null && parent.getId() != null){
-      parent = findById(parent.getId());
+    if(parentId != null){
+      ProductCategory parent = findById(parentId);
 
       if(parent.getLevel() == productCategory.getLevel() -1){
         productCategory.setParent(parent);
