@@ -9,6 +9,8 @@ its:
   admin-initializer:
     email: "admin@mail.com"
     password: "password"
+  security:
+    password-recovery-url: "http://localhost:4200/pasword-reset?token="
 
   file-store:
     basePath: "uploads"

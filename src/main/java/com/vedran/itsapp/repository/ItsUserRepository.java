@@ -18,5 +18,7 @@ public interface ItsUserRepository extends MongoRepository<ItsUser, String> {
   @Query("{ $or: [ {'firstName' : { $regex: ?0, $options: 'i'}} , {'lastName': { $regex: ?1, $options: 'i'}}]}")
   Page<ItsUser> searchByFirstOrLastName(String firstName, String lastName, Pageable pageable);
 
+  Optional<ItsUser> findByIdAndPasswordResetToken(String id ,String token);
+
 }
 

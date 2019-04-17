@@ -13,7 +13,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.UUID;
 
 public class ItsAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
   private final ItsJwtHelper jwt;
@@ -33,7 +32,7 @@ public class ItsAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 
   @Override
   protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authResult) throws IOException, ServletException {
-    String token = jwt.generateTokenJwt((ItsUser) authResult.getPrincipal());
+    String token = jwt.generateAuthorizationToken((ItsUser) authResult.getPrincipal());
     response.setContentType(MediaType.APPLICATION_JSON_UTF8_VALUE);
     response.getWriter().write(String.format("{\"auth-token\": \"%s\"}", token));
   }

@@ -56,6 +56,9 @@ public class ItsUser extends AbstractDocument {
   @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
   private String password;
 
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+  private String passwordResetToken;
+
   @NotEmpty
   private Set<Role> roles;
 
