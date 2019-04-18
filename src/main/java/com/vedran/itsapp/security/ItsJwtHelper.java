@@ -20,6 +20,7 @@ import java.util.UUID;
 
 @Component
 public class ItsJwtHelper {
+
   private Key secret;
 
   String generateAuthorizationToken(ItsUser user){

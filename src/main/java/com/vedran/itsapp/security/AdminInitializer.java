@@ -1,7 +1,7 @@
 package com.vedran.itsapp.security;
 
 import com.vedran.itsapp.model.ItsUser;
-import lombok.extern.java.Log;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
@@ -17,7 +17,7 @@ import java.util.HashSet;
 
 import static com.vedran.itsapp.model.embedded.Role.ROLE_HEAD_ADMINISTRATOR;
 
-@Log
+@Slf4j
 @Component
 public class AdminInitializer implements ApplicationRunner {
 
@@ -36,7 +36,7 @@ public class AdminInitializer implements ApplicationRunner {
             .in(ROLE_HEAD_ADMINISTRATOR.toString()).exists(true)), ItsUser.class);
 
     if(user == null){
-      log.info(ROLE_HEAD_ADMINISTRATOR.toString() + " not present.");
+      log.debug(ROLE_HEAD_ADMINISTRATOR.toString() + " not present.");
       ItsUser admin = new ItsUser();
       admin.setFirstName("Admin");
       admin.setLastName("Admin");
@@ -46,7 +46,7 @@ public class AdminInitializer implements ApplicationRunner {
       admin.setRoles(new HashSet<>(Collections.singletonList(ROLE_HEAD_ADMINISTRATOR)));
       admin.setPicture("profile-picture.png");
       template.save(admin);
-      log.info(String.format("Created admin with username %s and password %s",adminMail,adminPassword));
+      log.debug(String.format("Created admin with username %s and password %s",adminMail,adminPassword));
     }
   }
 }

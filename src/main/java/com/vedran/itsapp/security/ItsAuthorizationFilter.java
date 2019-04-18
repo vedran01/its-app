@@ -2,7 +2,7 @@ package com.vedran.itsapp.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
-import lombok.extern.java.Log;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -14,9 +14,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.logging.Level;
 
-@Log
+@Slf4j
 public class ItsAuthorizationFilter extends OncePerRequestFilter {
 
   private final ItsJwtHelper jwtHelper;
@@ -42,10 +41,9 @@ public class ItsAuthorizationFilter extends OncePerRequestFilter {
       SecurityContextHolder.getContext().setAuthentication(authenticationToken);
     }
     catch (UsernameNotFoundException | IllegalArgumentException |JwtException e){
-      log.log(Level.WARNING, e.getMessage());
+      log.debug(e.getMessage());
     }
 
     chain.doFilter(request,response);
   }
-
 }
