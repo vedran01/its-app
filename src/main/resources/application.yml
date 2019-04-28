@@ -8,6 +8,7 @@ spring:
 its:
   admin-initializer:
     email: "admin@mail.com"
+    username: "admin"
     password: "password"
   security:
     password-recovery-url: "http://localhost:4200/password-reset?token="

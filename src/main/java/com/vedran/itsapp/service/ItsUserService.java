@@ -48,7 +48,7 @@ public class ItsUserService {
     return repository.findAll(pageable);
   }
 
-  public ItsUser findOne(String id){
+  public ItsUser findById(String id){
     return repository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException(ItsUser.class,"id",id));
   }
@@ -62,31 +62,26 @@ public class ItsUserService {
     return repository.existsByEmail(email);
   }
 
-  public Page<ItsUser> findByFirstNameOrLastName(String firstName, String lastName, Pageable pageable) {
-    return repository.searchByFirstOrLastName(firstName,lastName, pageable);
+  public Page<ItsUser> findByFirstNameOrLastName(String name, Pageable pageable) {
+    return repository.searchByFirstOrLastName(name, pageable);
   }
 
-  @PreAuthorize("hasAnyRole('ROLE_HEAD_ADMINISTRATOR', 'ROLE_USER_ADMINISTRATOR')")
-  public ItsUser save(ItsUser user, ItsUser principal){
-    int principalMaxLevel = findRoleMaxLevel(principal.getRoles());
-    int userMaxLevel = findRoleMaxLevel(user.getRoles());
+  @PreAuthorize("hasAnyRole('ROLE_HEAD_ADMINISTRATOR', 'ROLE_ADMINISTRATOR')")
+  public ItsUser saveUser(ItsUser user, ItsUser principal){
 
-    if(testRole((r1,r2) -> r1 >= r2, userMaxLevel, principalMaxLevel)){
-      throw new BadRequestException(
-              String.format("You can not save user with authority grater or equals to yours. " +
-                      "Your authority %s, subject authority %s", Role.values()[principalMaxLevel],
-                      Role.values()[userMaxLevel] ));
+    if(hasAuthorityOver(principal, user)){
+      user.setEnabled(true);
+      user.setPicture("profile-picture.png");
+      user.setPassword(passwordEncoder.encode(user.getPassword()));
+      return repository.save(user);
     }
-
-    user.setPicture("profile-picture.png");
-    user.setPassword(passwordEncoder.encode(user.getPassword()));
-    return repository.save(user);
+    throw new BadRequestException("You don't have permission to saveUser this user.");
   }
 
   @PreAuthorize("@itsUserService.isOwner(#id, authentication) or\n" +
-          "hasAnyRole('ROLE_HEAD_ADMINISTRATOR', 'ROLE_USER_ADMINISTRATOR')")
-  public ItsUser update(String id, UpdateUserRequest request){
-    ItsUser user = findOne(id);
+          "hasAnyRole('ROLE_HEAD_ADMINISTRATOR', 'ROLE_ADMINISTRATOR')")
+  public ItsUser updateUser(String id, UpdateUserRequest request){
+    ItsUser user = findById(id);
     user.setFirstName(request.getFirstName());
     user.setLastName(request.getLastName());
     user.setContact(request.getContact());
@@ -98,7 +93,7 @@ public class ItsUserService {
 
   @PreAuthorize("@itsUserService.isOwner(#request.userId, authentication)")
   public String updatePassword(UpdatePasswordRequest request){
-    ItsUser user = findOne(request.getUserId());
+    ItsUser user = findById(request.getUserId());
     if(isValidPasswordRequest(request, user.getPassword())){
       user.setPassword(passwordEncoder.encode(request.getNewPassword()));
       repository.save(user);
@@ -107,41 +102,53 @@ public class ItsUserService {
     throw new BadRequestException("Invalid update password request.");
   }
 
-  @PreAuthorize("hasAnyRole('ROLE_HEAD_ADMINISTRATOR', 'ROLE_USER_ADMINISTRATOR')")
+  @PreAuthorize("hasAnyRole('ROLE_HEAD_ADMINISTRATOR', 'ROLE_ADMINISTRATOR')")
   public String updateRoles(String id, Set<Role> roles, ItsUser principal){
-    ItsUser subject = findOne(id);
-
-    int principalMaxLevel = findRoleMaxLevel(principal.getRoles());
-    int subjectMaxLevel = findRoleMaxLevel(subject.getRoles());
-    int suppliedRolesLevel = findRoleMaxLevel(roles);
-
+    ItsUser subject = findById(id);
 
     if(subject.getId().equals(principal.getId())){
-      if(testRole(Integer::equals,principalMaxLevel,suppliedRolesLevel)){
-        subject.setRoles(roles);
-        repository.save(subject);
-        return "Successfully updated your roles.";
-      }
-      else {
+      int principalMaxLevel = findRoleMaxLevel(principal.getRoles());
+      int suppliedRolesLevel = findRoleMaxLevel(roles);
+
+      if(principalMaxLevel != suppliedRolesLevel) {
         throw new BadRequestException("You can not downgrade your Authority.");
       }
     }
 
-    if(testRole((s,c) -> s <= c, principalMaxLevel, subjectMaxLevel)){
-      throw new BadRequestException("You don't have permission to change this subject role.");
-    }
-
-    if(testRole((r,c) -> r <= c,principalMaxLevel, suppliedRolesLevel)){
-      throw new BadRequestException("You can not assign role grater than or equals yours.");
+    else if(!hasAuthorityOver(principal,subject)){
+      throw new BadRequestException("You don't have permission to change this subject authority");
     }
 
     subject.setRoles(roles);
     repository.save(subject);
-    return "Subject role updated.";
+    return "Roles successfully updated.";
   }
 
-  private boolean testRole(BiPredicate<Integer ,Integer> predicate, int r1, int r2){
-    return predicate.test(r1,r2);
+  @PreAuthorize("@itsUserService.isOwner(#id, authentication) or\n" +
+          "hasAnyRole('ROLE_HEAD_ADMINISTRATOR', 'ROLE_USER_ADMINISTRATOR')")
+  public ItsUser updatePicture(String id, MultipartFile picture) {
+    ItsUser user = findById(id);
+    imageStore.deleteImage("users/" + user.getPicture());
+    String newPicture = imageStore.storeImage(picture, "users/",id);
+    user.setPicture(newPicture);
+    return repository.save(user);
+  }
+
+  @PreAuthorize("hasAnyRole('ROLE_HEAD_ADMINISTRATOR, ROLE_ADMINISTRATOR')")
+  public void deleteUser(String id, ItsUser principal){
+    ItsUser subject = findById(id);
+    if(hasAuthorityOver(principal,subject)){
+      repository.delete(subject);
+    }
+    throw new BadRequestException("You don't have permission to delete this user.");
+  }
+
+  public boolean isOwner(String id, Authentication authentication){
+    if(authentication.getPrincipal() instanceof ItsUserDetails) {
+      String principalId = ((ItsUser) authentication.getPrincipal()).getId();
+      return id.equals(principalId);
+    }
+    else return false;
   }
 
   private int findRoleMaxLevel(Set<Role> roles){
@@ -158,20 +165,16 @@ public class ItsUserService {
             && oldPasswordMatch.test(request.getOldPassword(),oldPassword);
   }
 
-  @PreAuthorize("@itsUserService.isOwner(#id, authentication) or\n" +
-          "hasAnyRole('ROLE_HEAD_ADMINISTRATOR', 'ROLE_USER_ADMINISTRATOR')")
-  public ItsUser updatePicture(String id, MultipartFile picture) {
-    ItsUser user = findOne(id);
-    imageStore.deleteImage("users/" + user.getPicture());
-    String newPicture = imageStore.storeImage(picture,"users/",id);
-    user.setPicture(newPicture);
-    return repository.save(user);
-  }
+  private boolean hasAuthorityOver(ItsUser principal, ItsUser subject){
 
-  public boolean isOwner(String id, Authentication authentication){
-    if(authentication.getPrincipal() instanceof ItsUserDetails) {
-      String principalId = ((ItsUser) authentication.getPrincipal()).getId();
-      return id.equals(principalId);
+    int principalAuthority = findRoleMaxLevel(principal.getRoles());
+    int subjectAuthority = findRoleMaxLevel(subject.getRoles());
+
+    if(principalAuthority > subjectAuthority){
+      return true;
+    }
+    else if(principalAuthority == subjectAuthority) {
+      return principal.isSpecial() && !subject.isSpecial();
     }
     else return false;
   }

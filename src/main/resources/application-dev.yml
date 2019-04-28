@@ -1,0 +1,7 @@
+
+spring:
+  mail:
+    host: smtp.mailtrap.io
+    port: 465
+    username: "b6c6d2a69836df"
+    password: "7891f42aa1f2dc"

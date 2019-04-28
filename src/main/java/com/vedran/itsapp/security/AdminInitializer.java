@@ -2,7 +2,6 @@ package com.vedran.itsapp.security;
 
 import com.vedran.itsapp.model.ItsUser;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -21,14 +20,24 @@ import static com.vedran.itsapp.model.embedded.Role.ROLE_HEAD_ADMINISTRATOR;
 @Component
 public class AdminInitializer implements ApplicationRunner {
 
-  @Value("${its.admin-initializer.email}")
-  private String adminMail;
-  @Value("${its.admin-initializer.password}")
-  private String adminPassword;
-  @Autowired
-  private MongoTemplate template;
-  @Autowired
-  private PasswordEncoder passwordEncoder;
+  private final String userName;
+  private final String email;
+  private final String password;
+  private final MongoTemplate template;
+  private final PasswordEncoder passwordEncoder;
+
+  public AdminInitializer(
+          @Value("${its.admin-initializer.username}") String userName,
+          @Value("${its.admin-initializer.email}") String email,
+          @Value("${its.admin-initializer.password}") String password,
+          MongoTemplate template,
+          PasswordEncoder passwordEncoder) {
+    this.userName = userName;
+    this.email = email;
+    this.password = password;
+    this.template = template;
+    this.passwordEncoder = passwordEncoder;
+  }
 
   @Override
   public void run(ApplicationArguments args) throws Exception {
@@ -40,13 +49,17 @@ public class AdminInitializer implements ApplicationRunner {
       ItsUser admin = new ItsUser();
       admin.setFirstName("Admin");
       admin.setLastName("Admin");
-      admin.setEmail(adminMail);
-      String password = passwordEncoder.encode(adminPassword);
+      admin.setEmail(email);
+      admin.setUserName(userName);
+      admin.setEnabled(true);
+      admin.setSpecial(true);
+      String password = passwordEncoder.encode(this.password);
       admin.setPassword(password);
       admin.setRoles(new HashSet<>(Collections.singletonList(ROLE_HEAD_ADMINISTRATOR)));
       admin.setPicture("profile-picture.png");
       template.save(admin);
-      log.debug(String.format("Created admin with username %s and password %s",adminMail,adminPassword));
+      log.debug(String.format("Created admin. \n username: %s \n email: %s \n password: %s",
+              userName, email, this.password));
     }
   }
 }

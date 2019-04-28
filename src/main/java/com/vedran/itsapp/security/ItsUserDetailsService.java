@@ -18,9 +18,10 @@ public class ItsUserDetailsService implements UserDetailsService {
   }
   //TODO IMPLEMENT LOADING BY USERNAME
   @Override
-  public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-    log.debug("Loading user with email or username: " + email );
-    return repository.findByEmail(email)
+  public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    log.debug("Loading user with email or username: " + username );
+    return repository.findByEmail(username)
+            .or(() -> repository.findByUserName(username))
             .map(ItsUserDetails::new)
             .orElseThrow(() -> new UsernameNotFoundException("User not found."));
   }

@@ -2,6 +2,7 @@ package com.vedran.itsapp.security;
 
 import com.vedran.itsapp.model.ItsUser;
 import com.vedran.itsapp.repository.ItsUserRepository;
+import com.vedran.itsapp.service.ItsMailService;
 import com.vedran.itsapp.util.MessageResponse;
 import com.vedran.itsapp.util.error.exceptions.BadRequestException;
 import com.vedran.itsapp.util.error.exceptions.ResourceNotFoundException;
@@ -30,6 +31,8 @@ public class ResetPaswordController {
   private ItsUserRepository userRepository;
   @Autowired
   private ItsJwtHelper jwt;
+  @Autowired
+  private ItsMailService mailService;
 
   @RequestMapping("/{email}")
   public ResponseEntity<MessageResponse> sendResetToken(@PathVariable String email) {
@@ -43,6 +46,7 @@ public class ResetPaswordController {
     user.setPasswordResetToken(uuid.toString());
     userRepository.save(user);
     String token = jwt.generatePasswordResetToken(user, uuid);
+    mailService.sendPasswordResetMail(user.getEmail(),recoveryBaseUrl + token );
     log.info(recoveryBaseUrl + token);
     return ResponseEntity.ok(new MessageResponse("A password reset message has been sent to your email address."));
   }
@@ -56,7 +60,7 @@ public class ResetPaswordController {
       String passwordResetToken = String.valueOf(claims.get("uuid"));
 
       ItsUser user = userRepository.findByIdAndPasswordResetToken(userId,passwordResetToken)
-              .orElseThrow(RuntimeException::new);
+              .orElseThrow(() -> new BadRequestException("Token not valid"));
 
         String password = passwordEncoder.encode(request.getPassword());
         user.setPassword(password);

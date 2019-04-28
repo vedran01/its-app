@@ -49,6 +49,6 @@ public class ItsUserDetails extends ItsUser implements UserDetails {
 
   @Override
   public boolean isEnabled() {
-    return true;
+    return super.isEnabled();
   }
 }

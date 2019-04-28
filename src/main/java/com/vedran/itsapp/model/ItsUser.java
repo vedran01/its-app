@@ -37,6 +37,7 @@ public class ItsUser extends AbstractDocument {
   @NotNull
   private Gender gender;
 
+  @NotNull
   private Date birthDate;
 
   @Valid
@@ -46,6 +47,10 @@ public class ItsUser extends AbstractDocument {
   @Valid
   @NotNull
   private Address address;
+
+  @NotEmpty
+  @Indexed(unique = true)
+  private String userName;
 
   @Email
   @Indexed(unique = true)
@@ -59,6 +64,12 @@ public class ItsUser extends AbstractDocument {
   @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
   private String passwordResetToken;
 
+  @NotNull
+  private boolean enabled;
+
+  @NotNull
+  private boolean special;
+
   @NotEmpty
   private Set<Role> roles;
 
@@ -70,5 +81,7 @@ public class ItsUser extends AbstractDocument {
     setFirstName(user.getFirstName());
     setLastName(user.getLastName());
     setPicture(user.getPicture());
+    setEnabled(user.isEnabled());
+    setSpecial(user.isSpecial());
   }
 }
