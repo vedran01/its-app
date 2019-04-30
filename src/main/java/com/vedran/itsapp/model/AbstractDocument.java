@@ -1,5 +1,6 @@
 package com.vedran.itsapp.model;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,8 +12,10 @@ import java.util.Date;
 
 @Getter
 @Setter
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public abstract class AbstractDocument {
   @Id
+  @EqualsAndHashCode.Include
   private String id;
   @CreatedDate
   private Date created;

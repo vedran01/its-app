@@ -64,14 +64,14 @@ public class ItsUserController {
   }
 
   @PostMapping
-  ResponseEntity<ItsUser> save(@Valid @RequestBody ItsUser user, @AuthenticationPrincipal ItsUser principal){
+  ResponseEntity<ItsUser> saveUser(@Valid @RequestBody ItsUser user, @AuthenticationPrincipal ItsUser principal){
     ItsUser savedUser = service.saveUser(user,principal);
     URI uri = ServletUriComponentsBuilder.fromCurrentRequest().buildAndExpand(savedUser.getId()).toUri();
     return ResponseEntity.created(uri).body(savedUser);
   }
 
   @PutMapping("/{id}")
-  ItsUser update(@PathVariable String id , @Valid @RequestBody UpdateUserRequest request){
+  ItsUser updateUser(@PathVariable String id , @Valid @RequestBody UpdateUserRequest request){
     return service.updateUser(id,request);
   }
 
@@ -91,6 +91,11 @@ public class ItsUserController {
                                         produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
   ItsUser updateUserPicture(@PathVariable String id, MultipartFile picture){
     return service.updatePicture(id,picture);
+  }
+
+  @PatchMapping("/{userId}/{officeId}")
+  ItsUser setOffice(@PathVariable String userId, @PathVariable String officeId){
+    return service.setOffice(userId,officeId);
   }
 
   @DeleteMapping("/{id}")

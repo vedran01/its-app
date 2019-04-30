@@ -1,6 +1,7 @@
 package com.vedran.itsapp.service;
 
 import com.vedran.itsapp.model.ItsUser;
+import com.vedran.itsapp.model.Office;
 import com.vedran.itsapp.model.embedded.Address;
 import com.vedran.itsapp.model.embedded.Contact;
 import com.vedran.itsapp.model.embedded.Gender;
@@ -33,37 +34,38 @@ import java.util.function.BiPredicate;
 @Service
 public class ItsUserService {
 
-  private final ItsUserRepository repository;
+  private final ItsUserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
-
+  private final OfficeService officeService;
   @Autowired
   private ImageStore imageStore;
 
-  public ItsUserService(ItsUserRepository repository, PasswordEncoder passwordEncoder) {
-    this.repository = repository;
+  public ItsUserService(ItsUserRepository userRepository, PasswordEncoder passwordEncoder, OfficeService officeService) {
+    this.userRepository = userRepository;
     this.passwordEncoder = passwordEncoder;
+    this.officeService = officeService;
   }
 
   public Page<ItsUser> findAll(Pageable pageable){
-    return repository.findAll(pageable);
+    return userRepository.findAll(pageable);
   }
 
   public ItsUser findById(String id){
-    return repository.findById(id)
+    return userRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException(ItsUser.class,"id",id));
   }
 
   public ItsUser findOneByEmail(String email){
-    return repository.findByEmail(email)
+    return userRepository.findByEmail(email)
             .orElse(null);
   }
 
   public boolean existsByEmail(String email){
-    return repository.existsByEmail(email);
+    return userRepository.existsByEmail(email);
   }
 
   public Page<ItsUser> findByFirstNameOrLastName(String name, Pageable pageable) {
-    return repository.searchByFirstOrLastName(name, pageable);
+    return userRepository.searchByFirstOrLastName(name, pageable);
   }
 
   @PreAuthorize("hasAnyRole('ROLE_HEAD_ADMINISTRATOR', 'ROLE_ADMINISTRATOR')")
@@ -73,7 +75,7 @@ public class ItsUserService {
       user.setEnabled(true);
       user.setPicture("profile-picture.png");
       user.setPassword(passwordEncoder.encode(user.getPassword()));
-      return repository.save(user);
+      return userRepository.save(user);
     }
     throw new BadRequestException("You don't have permission to saveUser this user.");
   }
@@ -88,7 +90,7 @@ public class ItsUserService {
     user.setAddress(request.getAddress());
     user.setGender(request.getGender());
     user.setBirthDate(request.getBirthDate());
-    return repository.save(user);
+    return userRepository.save(user);
   }
 
   @PreAuthorize("@itsUserService.isOwner(#request.userId, authentication)")
@@ -96,7 +98,7 @@ public class ItsUserService {
     ItsUser user = findById(request.getUserId());
     if(isValidPasswordRequest(request, user.getPassword())){
       user.setPassword(passwordEncoder.encode(request.getNewPassword()));
-      repository.save(user);
+      userRepository.save(user);
       return "Password successfully updated";
     }
     throw new BadRequestException("Invalid update password request.");
@@ -120,7 +122,7 @@ public class ItsUserService {
     }
 
     subject.setRoles(roles);
-    repository.save(subject);
+    userRepository.save(subject);
     return "Roles successfully updated.";
   }
 
@@ -131,16 +133,27 @@ public class ItsUserService {
     imageStore.deleteImage("users/" + user.getPicture());
     String newPicture = imageStore.storeImage(picture, "users/",id);
     user.setPicture(newPicture);
-    return repository.save(user);
+    return userRepository.save(user);
+  }
+
+  public ItsUser setOffice(String userId, String officeId){
+    Office office = officeService.findById(officeId);
+    ItsUser user = findById(userId);
+    user.setOffice(office);
+    return userRepository.save(user);
   }
 
   @PreAuthorize("hasAnyRole('ROLE_HEAD_ADMINISTRATOR, ROLE_ADMINISTRATOR')")
   public void deleteUser(String id, ItsUser principal){
     ItsUser subject = findById(id);
     if(hasAuthorityOver(principal,subject)){
-      repository.delete(subject);
+      userRepository.delete(subject);
     }
     throw new BadRequestException("You don't have permission to delete this user.");
+  }
+
+  public Iterable<ItsUser> findAllById(Set<String> idS){
+    return userRepository.findAllById(idS);
   }
 
   public boolean isOwner(String id, Authentication authentication){

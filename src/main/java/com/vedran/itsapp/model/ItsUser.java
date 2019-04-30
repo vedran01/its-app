@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.validation.Valid;
@@ -21,7 +22,7 @@ import java.util.Set;
 
 @Data
 @NoArgsConstructor
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 @Document(collection = "users")
 public class ItsUser extends AbstractDocument {
 
@@ -47,6 +48,10 @@ public class ItsUser extends AbstractDocument {
   @Valid
   @NotNull
   private Address address;
+
+  @DBRef
+  @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+  private Office office;
 
   @NotEmpty
   @Indexed(unique = true)
@@ -83,5 +88,6 @@ public class ItsUser extends AbstractDocument {
     setPicture(user.getPicture());
     setEnabled(user.isEnabled());
     setSpecial(user.isSpecial());
+    setOffice(user.getOffice());
   }
 }
