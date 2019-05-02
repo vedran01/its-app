@@ -68,7 +68,6 @@ public class ItsUserService {
     return userRepository.searchByFirstOrLastName(name, pageable);
   }
 
-  @PreAuthorize("hasAnyRole('ROLE_HEAD_ADMINISTRATOR', 'ROLE_ADMINISTRATOR')")
   public ItsUser saveUser(ItsUser user, ItsUser principal){
 
     if(hasAuthorityOver(principal, user)){

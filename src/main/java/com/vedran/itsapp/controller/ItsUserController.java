@@ -4,11 +4,14 @@ import com.vedran.itsapp.model.ItsUser;
 import com.vedran.itsapp.model.embedded.Role;
 import com.vedran.itsapp.security.ItsUserDetails;
 import com.vedran.itsapp.service.ItsUserService;
+import com.vedran.itsapp.util.ResponseBody;
+import com.vedran.itsapp.util.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -63,16 +66,21 @@ public class ItsUserController {
     return user;
   }
 
+
   @PostMapping
-  ResponseEntity<ItsUser> saveUser(@Valid @RequestBody ItsUser user, @AuthenticationPrincipal ItsUser principal){
+  @PreAuthorize("hasAnyRole('ROLE_HEAD_ADMINISTRATOR', 'ROLE_ADMINISTRATOR')")
+  ResponseEntity<ResponseBody<ItsUser>> saveUser(@RequestBody @Valid ItsUser user,
+                                                 @AuthenticationPrincipal ItsUser principal){
     ItsUser savedUser = service.saveUser(user,principal);
     URI uri = ServletUriComponentsBuilder.fromCurrentRequest().buildAndExpand(savedUser.getId()).toUri();
-    return ResponseEntity.created(uri).body(savedUser);
+    return ResponseEntity.created(uri).body(new ResponseBody<>("New user has been registered",savedUser));
   }
 
   @PutMapping("/{id}")
-  ItsUser updateUser(@PathVariable String id , @Valid @RequestBody UpdateUserRequest request){
-    return service.updateUser(id,request);
+  ResponseEntity<ResponseBody<ItsUser>> updateUser(@PathVariable String id ,
+                                                   @Valid @RequestBody UpdateUserRequest request){
+    ItsUser user = service.updateUser(id, request);
+    return ResponseEntity.ok(new ResponseBody<>("User has been updated",user));
   }
 
   @PutMapping(value = "/password", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
@@ -82,25 +90,29 @@ public class ItsUserController {
   }
 
   @PutMapping(value = "/{id}/role", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-  ResponseEntity<String> updateRole(@PathVariable String id, @RequestBody @NotNull Set<Role> roles, @AuthenticationPrincipal ItsUser user){
+  ResponseEntity<String> updateRole(@PathVariable String id,
+                                    @RequestBody @NotNull Set<Role> roles,
+                                    @AuthenticationPrincipal ItsUser user){
     String message = service.updateRoles(id,roles,user);
     return ResponseEntity.ok(String.format("{\"message\":\"%s\"}", message));
   }
 
   @PostMapping(value = "/{id}/picture", consumes = MediaType.MULTIPART_FORM_DATA_VALUE ,
                                         produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-  ItsUser updateUserPicture(@PathVariable String id, MultipartFile picture){
-    return service.updatePicture(id,picture);
+  ResponseBody<String> updateUserPicture(@PathVariable String id, MultipartFile picture){
+    ItsUser user = service.updatePicture(id, picture);
+    return new ResponseBody<>("Picture has been uploaded", user.getPicture());
   }
 
   @PatchMapping("/{userId}/{officeId}")
-  ItsUser setOffice(@PathVariable String userId, @PathVariable String officeId){
-    return service.setOffice(userId,officeId);
+  ResponseBody<ItsUser> setOffice(@PathVariable String userId, @PathVariable String officeId){
+    ItsUser user = service.setOffice(userId, officeId);
+    return new ResponseBody<>("User has been assigned to " + user.getOffice().getName(), user);
   }
 
   @DeleteMapping("/{id}")
-  ResponseEntity<?> deleteUserById(@PathVariable String id, @AuthenticationPrincipal ItsUser principal){
+  Response deleteUserById(@PathVariable String id, @AuthenticationPrincipal ItsUser principal){
     service.deleteUser(id,principal);
-    return ResponseEntity.noContent().build();
+    return new Response("User has been deleted");
   }
 }

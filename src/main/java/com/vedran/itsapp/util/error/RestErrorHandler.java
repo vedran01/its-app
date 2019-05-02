@@ -31,9 +31,12 @@ public class RestErrorHandler extends ResponseEntityExceptionHandler{
   }
 
   @Override
-  protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatus status, WebRequest request) {
-    return ResponseEntity.badRequest()
-            .body(ValidationErrorResponse.getResponse(ex,status,request));
+  protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
+                                                                HttpHeaders headers,
+                                                                HttpStatus status,
+                                                                WebRequest request) {
+    return ResponseEntity.unprocessableEntity()
+            .body(ValidationErrorResponse.getResponse(ex,HttpStatus.UNPROCESSABLE_ENTITY,request));
   }
 
   @Override

@@ -29,6 +29,6 @@ public class ValidationErrorResponse extends ErrorResponse{
             .map(err -> err.getField() + " " + err.getDefaultMessage())
             .collect(Collectors.toList());
     HttpServletRequest request = ((ServletWebRequest)webRequest).getRequest();
-    return new ValidationErrorResponse("Request fields not valid",status,"Bad Request",request,errors);
+    return new ValidationErrorResponse("Request fields not valid",status,"Un processable entity",request,errors);
   }
 }

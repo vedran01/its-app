@@ -80,6 +80,7 @@ public class ItsUser extends AbstractDocument {
 
   public ItsUser(ItsUser user){
     setId(user.getId());
+    setUserName(user.getUserName());
     setEmail(user.getEmail());
     setPassword(user.getPassword());
     setRoles(user.getRoles());
