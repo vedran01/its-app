@@ -4,7 +4,9 @@ import com.vedran.itsapp.model.Office;
 import com.vedran.itsapp.service.OfficeService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 
@@ -39,6 +41,11 @@ public class OfficeController {
   @PutMapping("/{id}")
   public Office updateOffice(@PathVariable String id, @RequestBody Office other){
     return officeService.updateOffice(id,other);
+  }
+
+  @PostMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  public Office updatePicture(@PathVariable String id, @RequestPart("picture") MultipartFile file){
+    return officeService.updatePicture(id, file);
   }
 
   @DeleteMapping("/{id}")
