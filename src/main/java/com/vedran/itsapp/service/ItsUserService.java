@@ -71,7 +71,6 @@ public class ItsUserService {
   public ItsUser saveUser(ItsUser user, ItsUser principal){
 
     if(hasAuthorityOver(principal, user)){
-      user.setEnabled(true);
       user.setPicture("profile-picture.png");
       user.setPassword(passwordEncoder.encode(user.getPassword()));
       return userRepository.save(user);
