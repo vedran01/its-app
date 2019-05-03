@@ -1,14 +1,16 @@
 package com.vedran.itsapp.controller;
 
+import com.querydsl.core.types.Predicate;
 import com.vedran.itsapp.model.ItsUser;
 import com.vedran.itsapp.model.embedded.Role;
 import com.vedran.itsapp.security.ItsUserDetails;
 import com.vedran.itsapp.service.ItsUserService;
-import com.vedran.itsapp.util.ResponseBody;
 import com.vedran.itsapp.util.Response;
+import com.vedran.itsapp.util.ResponseBody;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.querydsl.binding.QuerydslPredicate;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -34,9 +36,9 @@ public class ItsUserController {
   private ItsUserService service;
 
   @GetMapping
-  Page<ItsUser> findAll(@RequestParam(required = false, defaultValue = "0") int page,
-                        @RequestParam(required = false, defaultValue = "10") int size){
-    return service.findAll(PageRequest.of(page,size));
+  Page<ItsUser> find(@QuerydslPredicate(root = ItsUser.class) Predicate predicate,
+                         Pageable pageable){
+    return service.find(predicate, pageable);
   }
 
   @GetMapping("/{id}")
@@ -54,12 +56,6 @@ public class ItsUserController {
     return service.existsByEmail(email);
   }
 
-  @GetMapping("/search")
-  Page<ItsUser> searchByFirstNameOrLastName(@RequestParam(required = false, defaultValue = "") String name,
-                                            @RequestParam(required = false, defaultValue = "0") int page,
-                                            @RequestParam(required = false, defaultValue = "10") int size){
-    return service.findByFirstNameOrLastName(name, PageRequest.of(page,size));
-  }
 
   @GetMapping("/principal")
   ItsUser itsUser(@AuthenticationPrincipal ItsUserDetails user){
@@ -67,8 +63,8 @@ public class ItsUserController {
   }
 
 
-  @PostMapping
   @PreAuthorize("hasAnyRole('ROLE_HEAD_ADMINISTRATOR', 'ROLE_ADMINISTRATOR')")
+  @PostMapping
   ResponseEntity<ResponseBody<ItsUser>> saveUser(@RequestBody @Valid ItsUser user,
                                                  @AuthenticationPrincipal ItsUser principal){
     ItsUser savedUser = service.saveUser(user,principal);

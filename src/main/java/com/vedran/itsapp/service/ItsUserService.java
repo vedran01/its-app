@@ -1,5 +1,6 @@
 package com.vedran.itsapp.service;
 
+import com.querydsl.core.types.Predicate;
 import com.vedran.itsapp.model.ItsUser;
 import com.vedran.itsapp.model.Office;
 import com.vedran.itsapp.model.embedded.Address;
@@ -46,7 +47,10 @@ public class ItsUserService {
     this.officeService = officeService;
   }
 
-  public Page<ItsUser> findAll(Pageable pageable){
+  public Page<ItsUser> find(Predicate predicate, Pageable pageable){
+    if(predicate != null){
+      return userRepository.findAll(predicate, pageable);
+    }
     return userRepository.findAll(pageable);
   }
 
@@ -64,9 +68,6 @@ public class ItsUserService {
     return userRepository.existsByEmail(email);
   }
 
-  public Page<ItsUser> findByFirstNameOrLastName(String name, Pageable pageable) {
-    return userRepository.searchByFirstOrLastName(name, pageable);
-  }
 
   public ItsUser saveUser(ItsUser user, ItsUser principal){
 
