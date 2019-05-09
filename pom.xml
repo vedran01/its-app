@@ -45,8 +45,8 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-mongodb</artifactId>
 		</dependency>
-		<!-- QUERY DSL -->
 
+		<!-- QUERY DSL -->
 		<dependency>
 			<groupId>com.querydsl</groupId>
 			<artifactId>querydsl-apt</artifactId>
@@ -59,8 +59,6 @@
 			<artifactId>querydsl-mongodb</artifactId>
 			<version>${querydsl.version}</version>
 		</dependency>
-
-
 
 		<!-- Json web token-->
 		<dependency>

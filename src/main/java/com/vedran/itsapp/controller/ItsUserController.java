@@ -108,7 +108,6 @@ public class ItsUserController {
 
   @DeleteMapping("/{id}")
   Response deleteUserById(@PathVariable String id, @AuthenticationPrincipal ItsUser principal){
-    service.deleteUser(id,principal);
-    return new Response("User has been deleted");
+    return service.deleteUser(id,principal);
   }
 }

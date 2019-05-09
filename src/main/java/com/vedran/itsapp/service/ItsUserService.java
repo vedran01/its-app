@@ -9,6 +9,7 @@ import com.vedran.itsapp.model.embedded.Gender;
 import com.vedran.itsapp.model.embedded.Role;
 import com.vedran.itsapp.repository.ItsUserRepository;
 import com.vedran.itsapp.security.ItsUserDetails;
+import com.vedran.itsapp.util.Response;
 import com.vedran.itsapp.util.error.exceptions.BadRequestException;
 import com.vedran.itsapp.util.error.exceptions.ResourceNotFoundException;
 import com.vedran.itsapp.util.storage.ImageStore;
@@ -143,10 +144,11 @@ public class ItsUserService {
   }
 
   @PreAuthorize("hasAnyRole('ROLE_HEAD_ADMINISTRATOR, ROLE_ADMINISTRATOR')")
-  public void deleteUser(String id, ItsUser principal){
+  public Response deleteUser(String id, ItsUser principal){
     ItsUser subject = findById(id);
     if(hasAuthorityOver(principal,subject)){
       userRepository.delete(subject);
+      return new Response("The user has been deleted");
     }
     throw new BadRequestException("You don't have permission to delete this user.");
   }
